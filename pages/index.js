@@ -1,5 +1,5 @@
-import Head from 'next/head'
-import styles from '../styles/Home.module.css'
+import Head from 'next/head';
+import Link from 'next/link';
 import { signIn, signOut, useSession } from "next-auth/client";
 
 export default function Home() {
@@ -13,7 +13,12 @@ export default function Home() {
 
       <nav>
         {!session ? (
-          <button onClick={() => signIn("github")}>GitHub Connect</button>
+          <>
+            <Link href="/signup">
+              <a>Sign Up</a>
+            </Link>
+            <button onClick={() => signIn("github")}>GitHub Connect</button>
+          </>
         ) : (
           <>
             <span>{session.user.name}</span>
@@ -27,6 +32,7 @@ export default function Home() {
           </>
         )}
       </nav>
+
     </>
   );
 }
