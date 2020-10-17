@@ -1,6 +1,6 @@
 import Head from 'next/head';
-import Link from 'next/link';
 import { signIn, signOut, useSession } from "next-auth/client";
+import SignIn from "../components/credentials-signin";
 
 export default function Home() {
   const [session] = useSession();
@@ -14,9 +14,7 @@ export default function Home() {
       <nav>
         {!session ? (
           <>
-            <Link href="/signup">
-              <a>Sign Up</a>
-            </Link>
+            <SignIn />
             <button onClick={() => signIn("github")}>GitHub Connect</button>
           </>
         ) : (
