@@ -2,7 +2,7 @@ import NextAuth from "next-auth";
 import Providers from "next-auth/providers";
 import Adapters from "next-auth/adapters";
 import { PrismaClient } from "@prisma/client";
-
+import { userLogin, userCreate } from '../../../controllers/userController';
 
 let prisma;
 
@@ -15,56 +15,52 @@ if (process.env.NODE_ENV === "production") {
   prisma = global.prisma;
 }
 
+const providers = [
 
-const authHandler = (req, res) => NextAuth(req, res, options);
-export default authHandler;
+  Providers.Credentials({
+    authorize: async (credentials) => {
+
+
+      if(credentials.action === 'register') {
+
+        const user = userCreate(credentials);
+        if (user) { return Promise.resolve(user); } 
+        else { return Promise.resolve(null); }
+
+      } else {
+
+        const user = userLogin(credentials);
+        if (user) { return Promise.resolve(user); } 
+        else { return Promise.resolve(null); }
+
+      }
+
+      
+    }
+  })
+
+];
 
 
 const options = {
-  providers: [
-
-    Providers.GitHub({
-      clientId: process.env.GITHUB_CLIENT_ID,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    }),
-
-    Providers.Credentials({
-      // The name to display on the sign in form (e.g. 'Sign in with...')
-      name: 'regular',
-      // The credentials is used to generate a suitable form on the sign in page.
-      // You can specify whatever fields you are expecting to be submitted.
-      // e.g. domain, username, password, 2FA token, etc.
-      credentials: {
-        username: { label: "Username", type: "text", placeholder: "jsmith" },
-        password: {  label: "Password", type: "password" }
-      },
-      authorize: async (credentials) => {
-
-        console.log(credentials);
-
-        // Add logic here to look up the user from the credentials supplied
-        const user = { id: 1, name: 'J Smith', email: 'jsmith@example.com' }
-  
-        if (user) {
-          // Any object returned will be saved in `user` property of the JWT
-          return Promise.resolve(user);
-        } else {
-          // If you return null or false then the credentials will be rejected
-          return Promise.resolve(null);
-          // You can also Reject this callback with an Error or with a URL:
-          // return Promise.reject(new Error('error message')) // Redirect to error page
-          // return Promise.reject('/path/to/redirect')        // Redirect to a URL
-        }
-      }
-    })
-
-  ],
+  providers,
   adapter: Adapters.Prisma.Adapter({ prisma }),
   debug: process.env.NODE_ENV === "development",
   secret: process.env.AUTH_SECRET,
   jwt: {
     secret: process.env.JWT_SECRET,
   },
-  session: { jwt: true }
+  session: { jwt: true },
+  pages: {
+   // signIn: '/signin',
+ //   signOut: '/auth/signout',
+    error: '/error', // Error code passed in query string as ?error=
+  //  verifyRequest: '/auth/verify-request', // (used for check email message)
+    newUser: null // If set, new users will be directed here on first sign in
+  }
 };
 
+
+
+const authHandler = (req, res) => NextAuth(req, res, options);
+export default authHandler;
